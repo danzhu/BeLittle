@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using BeLittle.Factories;
+using BeLittle.Systems;
+using ECS;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -7,15 +10,34 @@ namespace BeLittle
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
-    public class Game1 : Game
+    public class Engine : Game
     {
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        private GameTime time;
+        public GameTime Time => time;
 
-        public Game1()
+        private SpriteBatch spriteBatch;
+        public SpriteBatch Sprite => spriteBatch;
+
+        public EntityWorld World { get; }
+
+        public GraphicsDeviceManager Graphics { get; }
+
+        public Engine()
         {
-            graphics = new GraphicsDeviceManager(this);
+            Graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+
+            World = new EntityWorld()
+            {
+                new TimeSystem(this),
+                new MapSystem(this),
+                new AnimationSystem(this),
+                new TestSystem(this),
+                new RenderSystem(this),
+                new UISystem(this),
+
+                new BoxFactory(this),
+            };
         }
 
         /// <summary>
@@ -27,6 +49,7 @@ namespace BeLittle
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
+            World.Initialize();
 
             base.Initialize();
         }
@@ -41,6 +64,7 @@ namespace BeLittle
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
+            World.Load();
         }
 
         /// <summary>
@@ -50,6 +74,7 @@ namespace BeLittle
         protected override void UnloadContent()
         {
             // TODO: Unload any non ContentManager content here
+            World.Unload();
         }
 
         /// <summary>
@@ -61,8 +86,10 @@ namespace BeLittle
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+            time = gameTime;
 
             // TODO: Add your update logic here
+            World.Update();
 
             base.Update(gameTime);
         }
@@ -73,9 +100,11 @@ namespace BeLittle
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
+            time = gameTime;
 
             // TODO: Add your drawing code here
+            World.Render();
 
             base.Draw(gameTime);
         }
